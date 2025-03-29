@@ -87,5 +87,4 @@ If you use `pyannote.audio` please use the following citations:
   Year = {2021},
 }
 ```
-
-sd
+d
