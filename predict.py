@@ -3,18 +3,14 @@ download model weights to /data
 wget wget -O - https://pyannote-speaker-diarization.s3.eu-west-2.amazonaws.com/data-2023-03-25-02.tar.gz | tar xz -C /
 """
 import json
-import tempfile
-
-from cog import BasePredictor, Input, Path
+from pathlib import Path
 from pyannote.audio.pipelines import SpeakerDiarization
-
 from lib.diarization import DiarizationPostProcessor
 from lib.audio import AudioPreProcessor
 
-
-class Predictor(BasePredictor):
+class SimpleDiarizer:
     def setup(self):
-        """Load the model into memory to make running multiple predictions efficient"""
+        """Load the model into memory"""
         self.diarization = SpeakerDiarization(
             segmentation="/data/pyannote/segmentation/pytorch_model.bin",
             embedding="/data/speechbrain/spkrec-ecapa-voxceleb",
@@ -53,14 +49,9 @@ class Predictor(BasePredictor):
         }
         return self.diarization_post.process(diarization, embeddings)
 
-    def predict(
-        self,
-        audio: Path = Input(description="Audio file",
-                            default="https://pyannote-speaker-diarization.s3.eu-west-2.amazonaws.com/lex-levin-4min.mp3"),
-    ) -> Path:
-        """Run a single prediction on the model"""
-
-        self.audio_pre.process(audio)
+    def process_audio(self, audio_path: str) -> dict:
+        """Process a single audio file"""
+        self.audio_pre.process(audio_path)
 
         if self.audio_pre.error:
             print(self.audio_pre.error)
@@ -69,8 +60,17 @@ class Predictor(BasePredictor):
             result = self.run_diarization()
 
         self.audio_pre.cleanup()
+        return result
 
-        output = Path(tempfile.mkdtemp()) / "output.json"
-        with open(output, "w") as f:
-            f.write(json.dumps(result, indent=2))
-        return output
+# Usage example
+if __name__ == "__main__":
+    diarizer = SimpleDiarizer()
+    diarizer.setup()
+    
+    # Process an audio file
+    audio_path = "path/to/your/audio.mp3"
+    result = diarizer.process_audio(audio_path)
+    
+    # Save the results
+    with open("output.json", "w") as f:
+        json.dump(result, f, indent=2)
