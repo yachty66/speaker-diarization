@@ -1,0 +1,1 @@
+- set the number of speakers which needs to be getting detected 

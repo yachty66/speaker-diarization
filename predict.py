@@ -41,7 +41,12 @@ class SimpleDiarizer:
                 closure['embeddings'] = args[0]
 
         print('diarizing audio file...')
-        diarization = self.diarization(self.audio_pre.output_path, hook=hook)
+        # Add num_speakers=6 parameter here
+        diarization = self.diarization(
+            self.audio_pre.output_path, 
+            num_speakers=6,  # This forces exactly 6 speakers
+            hook=hook
+        )
         embeddings = {
             'data': closure['embeddings'],
             'chunk_duration': self.diarization.segmentation_duration,
@@ -68,7 +73,7 @@ if __name__ == "__main__":
     diarizer.setup()
     
     # Process an audio file
-    audio_path = "path/to/your/audio.mp3"
+    audio_path = "output.mp4"
     result = diarizer.process_audio(audio_path)
     
     # Save the results
